@@ -56,8 +56,21 @@ function CrateSpawner:TrySpawn()
 		return
 	end
 
+	local spawnCF: CFrame
+	local container = island and island:FindFirstChild("CrateContainer", true)
+	if container then
+		local sx = container.Size.X / 2 * 0.8
+		local sz = container.Size.Z / 2 * 0.8
+		local rx = ProcGenRandom.get():NextNumber(-sx, sx)
+		local rz = ProcGenRandom.get():NextNumber(-sz, sz)
+		spawnCF = container.CFrame * CFrame.new(rx, container.Size.Y / 2 + 1.5, rz)
+			* CFrame.Angles(0, ProcGenRandom.get():NextNumber(0, math.pi * 2), 0)
+	else
+		spawnCF = self.Instance:GetPivot() * CFrame.Angles(0, ProcGenRandom.get():NextNumber(0, math.pi * 2), 0)
+	end
+
 	local crate = template:Clone()
-	crate:PivotTo(self.Instance:GetPivot() * CFrame.Angles(0, ProcGenRandom.get():NextNumber(0, math.pi * 2), 0))
+	crate:PivotTo(spawnCF)
 	crate.Parent = island or self.Instance.Parent
 end
 

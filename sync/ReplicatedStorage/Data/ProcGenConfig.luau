@@ -3,7 +3,7 @@ local ProcGenConfig = {}
 -- Set to a number for deterministic worlds; nil picks a random seed each session
 ProcGenConfig.SEED = nil
 
-ProcGenConfig.TOWN_Z_POSITIONS = { -5000, -10000, -15000 }
+ProcGenConfig.TOWN_Z_POSITIONS = {-1000, -5000, -10000, -15000}
 
 ProcGenConfig.MIN_ISLAND_SPACING = 120
 ProcGenConfig.MAX_ISLAND_SPACING = 220

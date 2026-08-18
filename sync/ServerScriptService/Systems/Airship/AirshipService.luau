@@ -1,5 +1,6 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local Scale = require(ReplicatedStorage.Scale)
@@ -12,37 +13,48 @@ local AirshipService = Knit.CreateService({
 	},
 })
 
+function AirshipService:KnitInit() end
+
 function AirshipService:KnitStart()
-	local airship = self:GetPrimaryAirship()
-	local startPosition = airship:GetPivot().Position
+	local AirshipModule = require(ServerScriptService.Systems.Airship.Airship)
+	local PrimaryAirship = self:GetPrimaryAirship()
+	local StartPosition = PrimaryAirship:GetPivot().Position
+
+	AirshipModule:WaitForInstance(PrimaryAirship):andThen(function(Airship)
+		self._airshipComponent = Airship
+	end)
 
 	Timer.Simple(0.2, function()
-		local currentPosition = airship:GetPivot().Position
-		local distanceStuds = startPosition.Z - currentPosition.Z
-		local nauticalMiles = Scale.studsToNauticalMiles(distanceStuds)
-		self.Client.TotalDistanceTraveled:Set(nauticalMiles)
+		local CurrentPosition = PrimaryAirship:GetPivot().Position
+		local DistanceStuds = StartPosition.Z - CurrentPosition.Z
+		local NauticalMiles = Scale.studsToNauticalMiles(DistanceStuds)
+		self.Client.TotalDistanceTraveled:Set(NauticalMiles)
 	end)
 end
 
-function AirshipService:KnitInit() end
-
-function AirshipService:GetTravelY(): number
-	return self:GetPrimaryAirship():GetPivot().Position.Y
-end
-
-function AirshipService:GetTravelZ(): number
-	return self:GetPrimaryAirship():GetPivot().Position.Z
-end
-
 function AirshipService:GetPrimaryAirship()
-	local airship = CollectionService:GetTagged("PrimaryAirship")[1]
+	local Airship = CollectionService:GetTagged("PrimaryAirship")[1]
 
 	repeat
 		task.wait()
-		airship = CollectionService:GetTagged("PrimaryAirship")[1]
-	until airship
+		Airship = CollectionService:GetTagged("PrimaryAirship")[1]
+	until Airship
 
-	return airship
+	return Airship
+end
+
+function AirshipService:TakeDamage(Amount)
+	if self._airshipComponent then
+		self._airshipComponent:TakeDamage(Amount)
+	end
+end
+
+function AirshipService:GetTravelY()
+	return self:GetPrimaryAirship():GetPivot().Position.Y
+end
+
+function AirshipService:GetTravelZ()
+	return self:GetPrimaryAirship():GetPivot().Position.Z
 end
 
 return AirshipService

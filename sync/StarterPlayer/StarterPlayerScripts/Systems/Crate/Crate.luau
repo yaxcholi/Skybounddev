@@ -16,7 +16,7 @@ local function isHoldingAnyCrate(): boolean
 	local localPlayer = Players.LocalPlayer
 
 	for _, crate in Crate:GetAll() do
-		if crate.Server.Holder:Get() == localPlayer then
+		if crate.Server and crate.Server.Holder and crate.Server.Holder:Get() == localPlayer then
 			return true
 		end
 	end
@@ -25,7 +25,7 @@ local function isHoldingAnyCrate(): boolean
 end
 
 local function isLocalHolder(crate): boolean
-	return crate.Server.Holder:Get() == Players.LocalPlayer
+	return crate.Server ~= nil and crate.Server.Holder ~= nil and crate.Server.Holder:Get() == Players.LocalPlayer
 end
 
 function Crate:Construct()

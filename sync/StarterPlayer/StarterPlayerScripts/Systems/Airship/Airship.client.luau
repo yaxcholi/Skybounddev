@@ -20,7 +20,7 @@ function Airship:Start()
 		if Processed then
 			return
 		end
-		if not Seat or Seat.Occupant ~= LocalPlayer.Character:FindFirstChild("Humanoid") then
+		if not Seat or not LocalPlayer.Character or Seat.Occupant ~= LocalPlayer.Character:FindFirstChild("Humanoid") then
 			return
 		end
 		if Input.KeyCode == Enum.KeyCode.Z then

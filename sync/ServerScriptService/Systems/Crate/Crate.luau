@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local TweenService = game:GetService("TweenService")
 
 local Component = require(ReplicatedStorage.Packages.Component)
 local TroveAdder = require(ReplicatedStorage.ComponentExtensions.TroveAdder)
@@ -12,6 +13,9 @@ local LootGen = require(ServerScriptService.Systems.Loot.LootGen)
 local HOLD_OFFSET = CFrame.new(0, 0, -4)
 local SURFACE_WELD_NAME = "SurfaceWeld"
 local SURFACE_RAYCAST_DISTANCE = 50
+local LID_OPEN_TWEEN_INFO = TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local LID_OPEN_OFFSET = CFrame.new(0, 6, 0) * CFrame.Angles(math.rad(-80), 0, 0)
+local LID_DESTROY_DELAY = 0.5
 
 local Crate = Component.new({ Tag = "Crate", Extensions = { TroveAdder, RemoteComponent } })
 Crate.Client = {
@@ -217,12 +221,31 @@ function Crate:OpenDoor(player: Player)
 		return
 	end
 
-	local door = self.Instance:FindFirstChild("Door")
+	local door = self.Instance:FindFirstChild("Door") :: MeshPart?
 	if not door then
 		return
 	end
 
-	door:Destroy()
+	if self._interactable then
+		self._interactable:SetEnabled(false)
+	end
+
+	local weld = door:FindFirstChildWhichIsA("WeldConstraint")
+	if weld then
+		weld:Destroy()
+	end
+	door.Anchored = true
+
+	local attachment = door:FindFirstChild("LootParticle_Attachment")
+	if attachment then
+		for _, emitter in attachment:GetChildren() do
+			if emitter:IsA("ParticleEmitter") then
+				emitter:Emit(25)
+			end
+		end
+	end
+
+	TweenService:Create(door, LID_OPEN_TWEEN_INFO, { CFrame = door.CFrame * LID_OPEN_OFFSET }):Play()
 
 	local lootGen = self.Instance:FindFirstChild("LootGen")
 	if lootGen then
@@ -231,9 +254,11 @@ function Crate:OpenDoor(player: Player)
 		end)
 	end
 
-	if self._interactable then
-		self._interactable:SetEnabled(false)
-	end
+	task.delay(LID_DESTROY_DELAY, function()
+		if door and door.Parent then
+			door:Destroy()
+		end
+	end)
 end
 
 function Crate:PickUp(player: Player)

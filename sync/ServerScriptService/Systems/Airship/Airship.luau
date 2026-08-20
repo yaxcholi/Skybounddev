@@ -247,21 +247,36 @@ function Airship:CheckDock(CurrentPos)
 end
 
 function Airship:EnterDocked(Platform)
+	if self._state == "Docked" then
+		return
+	end
 	self._state = "Docked"
 	self._dockPlatform = Platform
 	self._steerAngle = 0
 	self._seat.Disabled = true
 	self.Client.State:Set("Docked")
 
-	task.delay(DockDuration, function()
-		if self._state == "Docked" then
-			self:ExitDocked()
+	local ProcGenConfig = require(game:GetService("ReplicatedStorage").Data.ProcGenConfig)
+	local platformZ = Platform:IsA("Model") and Platform:GetPivot().Position.Z or Platform.Position.Z
+	local townIndex = 1
+	for i, z in ProcGenConfig.TOWN_Z_POSITIONS do
+		if math.abs(z - platformZ) < 400 then
+			townIndex = i
+			break
 		end
+	end
+
+	local ContractService = Knit.GetService("ContractService")
+	ContractService:OnDocked(townIndex, function()
+		self:ExitDocked()
 	end)
 end
 
 function Airship:ExitDocked()
 	self._state = "Moving"
+	if self._dockPlatform then
+		self._dockPlatform:Destroy()
+	end
 	self._dockPlatform = nil
 	self._seat.Disabled = false
 	self._dockCooldown = true
